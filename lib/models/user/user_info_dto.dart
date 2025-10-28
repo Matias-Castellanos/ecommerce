@@ -1,27 +1,35 @@
 class UserInfoDto {
   final int id;
   final String email;
-  final int role; // 0 = Cliente, 1 = Empresa
-  final int? companyId; // <- Solo se usa si el usuario es empresa
+  final int role;
+  final int? companyId;
+  final String? token; // ✅ <-- agrega esta línea
 
   UserInfoDto({
     required this.id,
     required this.email,
     required this.role,
     this.companyId,
+    this.token, // ✅
   });
 
-  factory UserInfoDto.fromJson(Map<String, dynamic> json) => UserInfoDto(
-        id: json['id'],
-        email: json['email'],
-        role: json['role'],
-        companyId: json['companyId'], // puede ser null si es cliente
-      );
+  factory UserInfoDto.fromJson(Map<String, dynamic> json) {
+    return UserInfoDto(
+      id: json['id'],
+      email: json['email'],
+      role: json['role'],
+      companyId: json['companyId'],
+      token: json['token'], // ✅ asegúrate de leerlo si viene del backend
+    );
+  }
 
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'email': email,
-        'role': role,
-        if (companyId != null) 'companyId': companyId,
-      };
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'email': email,
+      'role': role,
+      'companyId': companyId,
+      'token': token, // ✅
+    };
+  }
 }

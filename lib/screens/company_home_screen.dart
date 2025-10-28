@@ -32,10 +32,9 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
     _fetchProducts();
   }
 
-
   Future<void> _fetchProducts() async {
     try {
-      final products = await _api.getProducts(); // ✅ ahora trae todos
+      final products = await _api.getProducts();
       setState(() {
         _products = products;
       });
@@ -84,8 +83,6 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
                       itemCount: _products.length,
                       itemBuilder: (context, index) {
                         final product = _products[index];
-                        final belongsToCompany =
-                            product.companyId == widget.user.companyId;
 
                         return Card(
                           margin: const EdgeInsets.symmetric(
@@ -102,13 +99,11 @@ class _CompanyHomeScreenState extends State<CompanyHomeScreen> {
                               '${product.description}\nStock: ${product.stock} | Precio: \$${product.price.toStringAsFixed(2)}',
                             ),
                             isThreeLine: true,
-                            trailing: belongsToCompany
-                                ? IconButton(
-                                    icon: const Icon(Icons.edit,
-                                        color: Colors.blue),
-                                    onPressed: () => _editProduct(product),
-                                  )
-                                : null, // 🔒 solo la empresa que creó puede editar
+                            trailing: IconButton(
+                              icon:
+                                  const Icon(Icons.edit, color: Colors.blue),
+                              onPressed: () => _editProduct(product),
+                            ),
                           ),
                         );
                       },

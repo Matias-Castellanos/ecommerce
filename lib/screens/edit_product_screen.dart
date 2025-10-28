@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../models/product/product_dto.dart';
-import '../models/product/product_create_dto.dart';
 import '../models/user/user_info_dto.dart';
 import '../services/api_service.dart';
 
@@ -56,24 +55,27 @@ class _EditProductScreenState extends State<EditProductScreen> {
     setState(() => _isSubmitting = true);
 
     try {
-      final dto = ProductCreateDto(
+      // ✅ Crear el producto actualizado con los nuevos valores
+      final updatedProduct = ProductDto(
+        id: widget.product.id,
         name: _nameController.text.trim(),
         description: _descriptionController.text.trim(),
         price: double.parse(_priceController.text.trim()),
         stock: int.parse(_stockController.text.trim()),
-        companyId: widget.user.companyId!, // 🔹 se mantiene la empresa
+        companyId: widget.user.companyId ?? widget.product.companyId ?? 0,
       );
 
-      await _api.updateProduct(widget.product.id, dto);
+      // ✅ Llamar al servicio que ya maneja el token internamente
+      await _api.updateProduct(updatedProduct);
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Producto actualizado correctamente')),
+        const SnackBar(content: Text('✅ Producto actualizado correctamente')),
       );
-      Navigator.pop(context, true); // ✅ vuelve y actualiza lista
+      Navigator.pop(context, true); // 🔙 Regresa con éxito
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al actualizar producto: $e')),
+        SnackBar(content: Text('❌ Error al actualizar producto: $e')),
       );
     } finally {
       setState(() => _isSubmitting = false);

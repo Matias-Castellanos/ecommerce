@@ -15,11 +15,12 @@ class ApiService {
   factory ApiService() => _instance;
   ApiService._internal();
 
-  final String _baseUrl = 'https://simul-parcial2.azurewebsites.net/api'; // ✅ cambia por tu URL real
+  final String _baseUrl =
+      'https://app-251027202854.azurewebsites.net/api'; // ✅ tu URL base correcta
   String? _token;
   UserInfoDto? _currentUser;
 
-  // Headers dinámicos
+  // Headers dinámicos con el token si existe
   Map<String, String> get _headers => {
         'Content-Type': 'application/json',
         if (_token != null) 'Authorization': 'Bearer $_token',
@@ -27,7 +28,6 @@ class ApiService {
 
   UserInfoDto? get currentUser => _currentUser;
 
-  // ✅ Se usa correctamente ahora
   void _setToken(String token) => _token = token;
 
   void clearToken() {
@@ -124,18 +124,14 @@ class ApiService {
     return ProductDto.fromJson(jsonDecode(res.body));
   }
 
-  
-
   /// Crea un producto (usado por empresas)
   Future<List<ProductDto>> getCompanyProducts(int companyId) async {
-    final url = Uri.parse('$_baseUrl/companies/$companyId'); // ✅ endpoint correcto
+    final url = Uri.parse('$_baseUrl/companies/$companyId');
     final res = await http.get(url, headers: _headers);
 
     if (res.statusCode == 200) {
       final data = jsonDecode(res.body);
 
-      // ⚠️ Verifica si el JSON devuelto es directamente una lista de productos
-      // o si viene dentro de un campo "products" (depende del backend)
       if (data is List) {
         return data.map((json) => ProductDto.fromJson(json)).toList();
       } else if (data is Map && data['products'] != null) {
@@ -146,24 +142,23 @@ class ApiService {
         throw Exception('Formato de respuesta inesperado');
       }
     } else {
-      throw Exception('Error al obtener productos: ${res.statusCode} ${res.body}');
+      throw Exception(
+          'Error al obtener productos: ${res.statusCode} ${res.body}');
     }
   }
 
-
-
-  /// Actualiza un producto existente
-  Future<void> updateProduct(int id, ProductCreateDto dto) async {
-    final url = Uri.parse('$_baseUrl/Products/$id');
-    final res = await http.put(
+  /// ✅ Actualiza un producto existente (corregido)
+  Future<void> updateProduct(ProductDto product) async {
+    final url = Uri.parse('$_baseUrl/Products/${product.id}');
+    final response = await http.put(
       url,
       headers: _headers,
-      body: jsonEncode(dto.toJson()),
+      body: jsonEncode(product.toJson()),
     );
 
-    // Normalmente la API devuelve 204 No Content o 200 OK
-    if (res.statusCode != 204 && res.statusCode != 200) {
-      throw Exception('Error al actualizar producto: ${res.statusCode} ${res.body}');
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception(
+          'Error al actualizar producto: ${response.statusCode} ${response.body}');
     }
   }
 
@@ -195,14 +190,12 @@ class ApiService {
   Future<void> createOrder(OrderCreateDto dto, List<int> productIds) async {
     final url = Uri.parse('$_baseUrl/Orders');
 
-    // Construimos la estructura esperada por el backend
     final body = {
       'userId': dto.userId,
       'total': dto.total,
-      'items': productIds.map((id) => {
-        'productId': id,
-        'quantity': 1, // puedes adaptar si manejas cantidades
-      }).toList(),
+      'items': productIds
+          .map((id) => {'productId': id, 'quantity': 1})
+          .toList(),
     };
 
     final res = await http.post(
@@ -216,5 +209,20 @@ class ApiService {
     }
   }
 
-  Future<void> createProduct(ProductCreateDto dto) async {}
+  /// Crea un producto
+  Future<void> createProduct(ProductCreateDto dto) async {
+    final url = Uri.parse('$_baseUrl/Products');
+
+    final res = await http.post(
+      url,
+      headers: _headers,
+      body: jsonEncode(dto.toJson()),
+    );
+
+    if (res.statusCode != 201 &&
+        res.statusCode != 200 &&
+        res.statusCode != 204) {
+      throw Exception('Error al crear producto: ${res.statusCode} ${res.body}');
+    }
+  }
 }
